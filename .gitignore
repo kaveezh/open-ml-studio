@@ -2,8 +2,3 @@
 __pycache__/
 *.pyc
 .DS_Store
-models/*.joblib
-data/*
-!data/sample_classification.csv
-experiments/*.json
-.env

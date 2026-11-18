@@ -1,28 +1,35 @@
 # Open ML Studio v3 — Hybrid ML Workbench
 
-A local-first general-purpose tabular machine-learning workbench with a browser frontend and Python/FastAPI + scikit-learn backend.
+A local-first browser UI backed by Python FastAPI and scikit-learn for general-purpose tabular machine learning.
 
-## Project bundle
+## Requirements
+- Python 3.10–3.12 recommended
+- Internet access during first dependency installation
+- Modern Chrome, Edge or Firefox
+- 8 GB RAM recommended for larger datasets
 
-The complete runnable source package is included in [`Open_ML_Studio_v3_Hybrid.zip`](./Open_ML_Studio_v3_Hybrid.zip). Extract it and follow the bundled `README.md` for setup.
+## Windows
+1. Extract the ZIP.
+2. Install Python 3.10–3.12 and enable Add Python to PATH.
+3. Double-click `run_windows.bat`.
+4. Wait until Uvicorn reports that it is running on `http://127.0.0.1:8000`.
+5. Open `frontend/index.html` in a browser. The engine indicator should show Connected.
+6. API documentation: `http://127.0.0.1:8000/docs`.
 
-## Architecture
+## macOS / Linux
+Run `chmod +x run_mac_linux.sh && ./run_mac_linux.sh`, then open `frontend/index.html`.
 
-- Frontend: responsive HTML/CSS/JavaScript workspace
-- Backend: Python + FastAPI
-- ML engine: scikit-learn pipelines
-- Tasks: classification and regression
-- Algorithms: logistic/ridge, random forest, extra trees, gradient boosting, histogram gradient boosting, decision tree and k-nearest neighbours
-- Evaluation: held-out metrics and permutation feature importance
+## Included algorithms
+Classification: logistic regression, random forest, extra trees, gradient boosting, histogram gradient boosting, decision tree and k-nearest neighbours.
 
-## Quick start
+Regression: ridge, random forest, extra trees, gradient boosting, histogram gradient boosting, decision tree and k-nearest neighbours.
 
-1. Download and extract `Open_ML_Studio_v3_Hybrid.zip`.
-2. Install Python 3.10–3.12.
-3. On Windows, run `run_windows.bat`; on macOS/Linux, run `./run_mac_linux.sh`.
-4. Open `frontend/index.html` in a modern browser.
-5. API docs: `http://127.0.0.1:8000/docs`.
+Pipelines perform numeric median imputation + scaling and categorical most-frequent imputation + one-hot encoding. Evaluation uses a held-out test set and reports classification or regression metrics. Permutation importance is computed against held-out data.
 
-## Important
+## Important limitations in v3.0
+This is a functional starter release, not yet a production AutoML suite. Dataset and live model registries are in memory and clear on API restart; experiment JSON and joblib files persist. Model metadata is not reloaded after restart. Cross-validation, SHAP, neural networks, XGBoost/LightGBM, hyperparameter optimisation, grouped/time-series splitters, drift monitoring, authentication and multi-user isolation are not implemented yet. Chronological split follows row order; sort your CSV by timestamp first. Permutation importance is not causal explanation.
 
-This is an early v3 foundation, not a production-hosted service. It currently has no authentication or multi-user isolation. Do not expose the API directly to the public internet. See the bundled README for limitations and the roadmap.
+Do not expose this API to the public internet. It has no authentication. Only load trusted joblib files. For trading research, use walk-forward validation, fees, slippage, realistic execution and paper trading; a high historical score does not establish future profitability.
+
+## API endpoints
+`GET /api/health`; `POST /api/datasets`; `GET /api/datasets/{id}`; `POST /api/train`; `POST /api/predict`; `GET /api/experiments`; `GET /api/models`.

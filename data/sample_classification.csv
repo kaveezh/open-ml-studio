@@ -1,0 +1,11 @@
+age,income,visits,segment,responded
+24,32000,3,student,no
+45,78000,8,professional,yes
+31,51000,5,professional,yes
+22,27000,2,student,no
+52,91000,10,executive,yes
+38,61000,4,professional,no
+29,44000,7,student,yes
+47,83000,6,executive,yes
+35,56000,3,professional,no
+41,72000,9,professional,yes
