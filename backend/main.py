@@ -1,11 +1,11 @@
 from __future__ import annotations
-import io, json, uuid
+import io, json, uuid, os, hmac
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
 import joblib, numpy as np, pandas as pd
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -22,7 +22,16 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 BASE=Path(__file__).resolve().parents[1]
 for name in ('data','models','experiments'): (BASE/name).mkdir(exist_ok=True)
 app=FastAPI(title='Open ML Studio API',version='3.0.0',description='Local-first general-purpose tabular ML workbench')
-app.add_middleware(CORSMiddleware,allow_origins=['*'],allow_methods=['*'],allow_headers=['*'])
+@app.middleware("http")
+async def require_app_password(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.url.path != "/api/health":
+        configured = os.getenv("APP_PASSWORD", "")
+        supplied = request.headers.get("X-App-Password", "")
+        if not configured:
+            return JSONResponse(status_code=503, content={"detail": "Service is not configured. Set APP_PASSWORD in the hosting environment."})
+        if not supplied or not hmac.compare_digest(supplied, configured):
+            return JSONResponse(status_code=401, content={"detail": "Access password is missing or incorrect."})
+    return await call_next(request)
 DATASETS:dict[str,pd.DataFrame]={}; MODELS:dict[str,dict]={}; EXPERIMENTS:dict[str,dict]={}
 class TrainRequest(BaseModel):
  dataset_id:str; target:str; task:str=Field(pattern='^(classification|regression)$')
@@ -127,4 +136,4 @@ def experiments(): return sorted(EXPERIMENTS.values(),key=lambda x:x['created_at
 @app.get('/api/models')
 def models(): return [{'model_id':k,**{a:b for a,b in v.items() if a!='pipeline'}} for k,v in MODELS.items()]
 @app.get('/')
-def root(): return {'message':'Open ML Studio v3 API running','docs':'/docs'}
+def root(): return FileResponse(BASE/'frontend'/'index.html')
