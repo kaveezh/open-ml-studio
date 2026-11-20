@@ -21,6 +21,27 @@ create table if not exists public.project_members (
     primary key (project_id, user_id)
 );
 
+-- Every new project automatically receives an owner membership row. This keeps
+-- membership-based policies consistent with the owner field on projects.
+create or replace function public.add_project_owner_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+begin
+    insert into public.project_members (project_id, user_id, role)
+    values (new.id, new.owner_user_id, 'owner')
+    on conflict (project_id, user_id) do nothing;
+    return new;
+end;
+$;
+
+drop trigger if exists trg_add_project_owner_membership on public.projects;
+create trigger trg_add_project_owner_membership
+after insert on public.projects
+for each row execute function public.add_project_owner_membership();
+
 create table if not exists public.datasets (
     id uuid primary key default gen_random_uuid(),
     project_id uuid not null references public.projects(id) on delete cascade,
@@ -161,11 +182,13 @@ using (
 create policy "project members can read datasets"
 on public.datasets for select to authenticated
 using (
-    deleted_at is null and exists (
-        select 1 from public.project_members pm
-        where pm.project_id = project_id and pm.user_id = (select auth.uid())
+    deleted_at is null and (
+        owner_user_id = (select auth.uid())
+        or exists (
+            select 1 from public.project_members pm
+            where pm.project_id = project_id and pm.user_id = (select auth.uid())
+        )
     )
-    or owner_user_id = (select auth.uid())
 );
 
 create policy "project editors can create datasets"
