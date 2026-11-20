@@ -53,7 +53,7 @@ async def upload(file:UploadFile=File(...)):
  if not file.filename.lower().endswith('.csv'): raise HTTPException(400,'Upload a CSV file.')
  raw=await file.read()
  if len(raw)>100*1024*1024: raise HTTPException(413,'Maximum CSV size is 100 MB.')
- try: df=pd.read_csv(io.BytesIO(raw),sep=None,engine='python',low_memory=False)
+ try: df=pd.read_csv(io.BytesIO(raw),sep=None,engine='python')
  except Exception as e: raise HTTPException(400,f'CSV parse failed: {e}')
  if len(df)<2 or len(df.columns)<2: raise HTTPException(400,'CSV needs at least two columns and two rows.')
  if len(df)>500000: raise HTTPException(400,'Maximum supported rows: 500,000.')
