@@ -57,3 +57,8 @@ Open the service URL after deployment. The browser UI is served at `/`. The firs
 ## Cloud foundation roadmap
 
 The approved Sprint 1 architecture and implementation plan is documented in [`docs/sprint-1-cloud-foundation.md`](docs/sprint-1-cloud-foundation.md). The target design uses managed PostgreSQL for metadata and private object storage for datasets, trained model artifacts and reports. Provider-specific cloud integration, individual user authentication and tenant isolation are not yet implemented. Do not treat the current shared-password starter as a production multi-user service.
+
+
+## Supabase foundation (in progress)
+
+Supabase is the selected cloud platform for authentication, PostgreSQL metadata and private artifact storage. The initial SQL migration is in `supabase/migrations/0001_initial_schema.sql`; typed environment settings are in `backend/config.py`; copy `.env.example` to a private `.env` for local configuration. No live Supabase connection is enabled yet. Review `docs/sprint-1-cloud-foundation.md` before provisioning or applying the migration. Never commit the service-role key or expose it in frontend code.
