@@ -64,6 +64,40 @@ async def upload(file:UploadFile=File(...)):
  return {'dataset_id':did,'filename':file.filename,**profile(df)}
 @app.get('/api/datasets/{did}')
 def get_profile(did:str): return {'dataset_id':did,**profile(getdf(did))}
+
+@app.get('/api/analyze/{did}')
+def analyze_dataset(did: str):
+    """Return compact, bounded descriptive-analysis data for dashboard charts."""
+    df = getdf(did)
+    numeric = []
+    categorical = []
+    for col in df.columns:
+        s = df[col]
+        if pd.api.types.is_numeric_dtype(s) and not pd.api.types.is_bool_dtype(s):
+            clean = pd.to_numeric(s, errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
+            if len(clean):
+                counts, edges = np.histogram(clean.to_numpy(), bins=min(20, max(5, int(np.sqrt(len(clean))))))
+                numeric.append({
+                    "column": str(col), "count": int(len(clean)),
+                    "mean": float(clean.mean()), "median": float(clean.median()),
+                    "std": float(clean.std()) if len(clean) > 1 else 0.0,
+                    "min": float(clean.min()), "max": float(clean.max()),
+                    "histogram": {"labels": [f"{edges[i]:.3g}–{edges[i+1]:.3g}" for i in range(len(counts))],
+                                  "counts": [int(v) for v in counts]}
+                })
+        else:
+            vc = s.astype("string").fillna("(missing)").value_counts().head(12)
+            categorical.append({"column": str(col), "labels": [str(x)[:60] for x in vc.index],
+                                "counts": [int(x) for x in vc.values]})
+    corr_cols = [x["column"] for x in numeric[:20]]
+    corr = df[corr_cols].corr(numeric_only=True).replace([np.inf, -np.inf], np.nan).fillna(0) if len(corr_cols) >= 2 else pd.DataFrame()
+    return {
+        "dataset_id": did,
+        "numeric": numeric[:20],
+        "categorical": categorical[:20],
+        "correlation": {"labels": corr.columns.tolist(), "values": corr.round(3).values.tolist()} if not corr.empty else None,
+        "note": "Descriptive patterns are exploratory and do not establish causation."
+    }
 def estimator(name,task,seed):
  c={'logistic':LogisticRegression(max_iter=1500,class_weight='balanced'),'random_forest':RandomForestClassifier(n_estimators=200,min_samples_leaf=2,n_jobs=-1,class_weight='balanced_subsample',random_state=seed),'extra_trees':ExtraTreesClassifier(n_estimators=200,min_samples_leaf=2,n_jobs=-1,class_weight='balanced',random_state=seed),'gradient_boosting':GradientBoostingClassifier(random_state=seed),'hist_gradient_boosting':HistGradientBoostingClassifier(max_iter=120,random_state=seed),'decision_tree':DecisionTreeClassifier(max_depth=8,min_samples_leaf=3,class_weight='balanced',random_state=seed),'knn':KNeighborsClassifier(n_neighbors=7,weights='distance')} if task=='classification' else {'ridge':Ridge(),'random_forest':RandomForestRegressor(n_estimators=200,min_samples_leaf=2,n_jobs=-1,random_state=seed),'extra_trees':ExtraTreesRegressor(n_estimators=200,min_samples_leaf=2,n_jobs=-1,random_state=seed),'gradient_boosting':GradientBoostingRegressor(random_state=seed),'hist_gradient_boosting':HistGradientBoostingRegressor(max_iter=120,random_state=seed),'decision_tree':DecisionTreeRegressor(max_depth=8,min_samples_leaf=3,random_state=seed),'knn':KNeighborsRegressor(n_neighbors=7,weights='distance')}
  if name not in c: raise HTTPException(400,f'Unsupported algorithm: {name}')
