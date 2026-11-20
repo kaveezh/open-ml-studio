@@ -21,7 +21,9 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 BASE=Path(__file__).resolve().parents[1]
 for name in ('data','models','experiments'): (BASE/name).mkdir(exist_ok=True)
-app=FastAPI(title='Open ML Studio API',version='3.0.0',description='Local-first general-purpose tabular ML workbench')
+app=FastAPI(title='Open ML Studio API',version='3.1.0',description='Advanced general-purpose tabular ML workbench')
+from .advanced import router as advanced_router
+app.include_router(advanced_router)
 @app.middleware("http")
 async def require_app_password(request: Request, call_next):
     if request.url.path.startswith("/api/") and request.url.path != "/api/health":
@@ -51,7 +53,7 @@ async def upload(file:UploadFile=File(...)):
  if not file.filename.lower().endswith('.csv'): raise HTTPException(400,'Upload a CSV file.')
  raw=await file.read()
  if len(raw)>100*1024*1024: raise HTTPException(413,'Maximum CSV size is 100 MB.')
- try: df=pd.read_csv(io.BytesIO(raw),low_memory=False)
+ try: df=pd.read_csv(io.BytesIO(raw),sep=None,engine='python',low_memory=False)
  except Exception as e: raise HTTPException(400,f'CSV parse failed: {e}')
  if len(df)<2 or len(df.columns)<2: raise HTTPException(400,'CSV needs at least two columns and two rows.')
  if len(df)>500000: raise HTTPException(400,'Maximum supported rows: 500,000.')
