@@ -1,14 +1,15 @@
 # Sprint 1 — Cloud Foundation & Model Intelligence
 
-**Status:** Architecture approved; provider selection and implementation pending  
+**Status:** Supabase selected; foundation schema and typed configuration committed; live connection pending  
 **Branch:** `sprint-1-cloud-foundation`  
 **Goal:** Replace process-local registries with durable, tenant-aware persistence while preserving the existing FastAPI and scikit-learn engine.
 
 ## 1. Decisions and boundaries
 
 - Deployment direction: cloud-backed.
-- Metadata store: managed PostgreSQL.
-- Binary artifacts: private object storage (S3-compatible interface).
+- Selected platform: Supabase.
+- Metadata store: Supabase-hosted PostgreSQL.
+- Binary artifacts: private Supabase Storage bucket (`open-ml-artifacts`).
 - Application code must depend on storage interfaces, not a specific vendor SDK.
 - Keep the ML training and prediction pipeline independent from persistence.
 - Use database migrations; never create production tables implicitly at application startup.
@@ -231,14 +232,26 @@ Sprint 1 is complete only when:
 
 These should follow only after persistence, identity and tenant isolation are dependable.
 
-## 12. Provider selection gate
+## 12. Supabase provider decision and current implementation
 
-Before implementing the live cloud adapter, select:
-1. Identity provider (individual user login)
-2. Managed PostgreSQL provider
-3. Private object-storage provider
-4. Hosting environment and secret-management method
+**Selected provider:** Supabase for Auth, PostgreSQL and private Storage.
 
-The application should use standard PostgreSQL and an S3-compatible object-storage contract where possible. Provider selection must consider pricing, free-tier limits, region availability, data residency, backup/restore and exportability.
+Committed foundation files:
+- `backend/config.py`: typed environment settings and Supabase configuration validation. It does not create a network connection at import time.
+- `.env.example`: safe variable-name template with blank Supabase credentials.
+- `supabase/migrations/0001_initial_schema.sql`: initial metadata schema, indexes, project-owner membership trigger, RLS policies and private artifact bucket definition.
+- `backend/requirements.txt`: adds `pydantic-settings` for typed settings.
 
-**Current state:** This document records the target design. It does not mean cloud storage is already connected or that the current shared-password application is safe for sensitive or multi-user production data.
+### Configuration
+Copy `.env.example` to `.env` and set the values only in the private Codespaces secret/environment or local ignored file. Never commit `.env`. The Supabase service-role key is server-only and must never appear in browser JavaScript or frontend environment variables.
+
+### Next implementation gates
+1. Create a Supabase project and configure Auth providers / redirect URLs.
+2. Review and apply the SQL migration in the Supabase SQL Editor.
+3. Create the private Storage bucket and verify its policies in the dashboard.
+4. Configure server-side secrets and database connection pooling.
+5. Implement Supabase Auth token verification and derive the user ID from the verified token.
+6. Implement repository and object-storage adapters, then migrate dataset upload/read paths.
+7. Add two-user isolation, persistence-after-restart and backup/restore tests.
+
+**Current state:** Supabase has been selected and the initial schema/configuration groundwork is in GitHub. No Supabase project has been provisioned or connected; no migration has been applied; no user login or cloud upload is active. The current shared-password application remains a private development prototype and must not receive sensitive client data or be exposed as a multi-user production service.
