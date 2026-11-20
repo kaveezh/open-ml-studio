@@ -52,3 +52,8 @@ Before deploying, add an environment variable:
 Open the service URL after deployment. The browser UI is served at `/`. The first protected action asks for the shared access password; it is kept only in that browser tab's session storage. `GET /api/health` is public for the hosting health check.
 
 **Security scope:** this is a single shared-password starter, not a multi-user service. Anyone with the password can access the same in-memory datasets and model registry. Do not upload confidential, personal, financial, medical, or otherwise sensitive datasets. Use only for controlled testing until individual accounts, tenant isolation, durable storage, rate limits, and a security review are implemented.
+
+
+## Cloud foundation roadmap
+
+The approved Sprint 1 architecture and implementation plan is documented in [`docs/sprint-1-cloud-foundation.md`](docs/sprint-1-cloud-foundation.md). The target design uses managed PostgreSQL for metadata and private object storage for datasets, trained model artifacts and reports. Provider-specific cloud integration, individual user authentication and tenant isolation are not yet implemented. Do not treat the current shared-password starter as a production multi-user service.
