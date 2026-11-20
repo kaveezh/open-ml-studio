@@ -47,7 +47,7 @@ def getdf(i):
 def profile(df):
  return {'rows':len(df),'columns':len(df.columns),'duplicate_rows':int(df.duplicated().sum()),'memory_mb':round(df.memory_usage(deep=True).sum()/1048576,3),'column_profile':[{'name':str(c),'dtype':str(df[c].dtype),'numeric':bool(pd.api.types.is_numeric_dtype(df[c])),'missing':int(df[c].isna().sum()),'missing_pct':round(df[c].isna().mean()*100,2),'unique':int(df[c].nunique()),'examples':[str(x)[:70] for x in df[c].dropna().head(4)]} for c in df.columns]}
 @app.get('/api/health')
-def health(): return {'status':'ok','version':'3.0.0','engine':'scikit-learn','utc':datetime.now(timezone.utc).isoformat()}
+def health(): return {'status':'ok','version':'3.2.0','engine':'scikit-learn','utc':datetime.now(timezone.utc).isoformat()}
 @app.post('/api/datasets')
 async def upload(file:UploadFile=File(...)):
  if not file.filename.lower().endswith('.csv'): raise HTTPException(400,'Upload a CSV file.')
