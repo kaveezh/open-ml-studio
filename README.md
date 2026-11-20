@@ -1,4 +1,4 @@
-# Open ML Studio v3.1 — Secure Cloud ML Workbench
+# Open ML Studio v3.2 — Advanced ML Workbench
 
 A mobile-friendly browser UI served by Python FastAPI and scikit-learn for general-purpose tabular machine learning. The frontend and API are served from the same origin, and API actions require a shared access password.
 
@@ -26,13 +26,13 @@ Regression: ridge, random forest, extra trees, gradient boosting, histogram grad
 
 Pipelines perform numeric median imputation + scaling and categorical most-frequent imputation + one-hot encoding. Evaluation uses a held-out test set and reports classification or regression metrics. Permutation importance is computed against held-out data.
 
-## Important limitations in v3.0
-This is a functional starter release, not yet a production AutoML suite. Dataset and live model registries are in memory and clear on API restart; experiment JSON and joblib files persist. Model metadata is not reloaded after restart. Cross-validation, SHAP, neural networks, XGBoost/LightGBM, hyperparameter optimisation, grouped/time-series splitters, drift monitoring, authentication and multi-user isolation are not implemented yet. Chronological split follows row order; sort your CSV by timestamp first. Permutation importance is not causal explanation.
+## Advanced ML workflows in v3.2\n\nThe Advanced ML tools add:\n- Cross-validation (`POST /api/validate`) using stratified folds for classification and K-fold for regression.\n- Bounded randomized hyperparameter search (`POST /api/tune`) for selected estimators. Search results are cross-validated and still require a separate untouched holdout evaluation.\n- K-means clustering (`POST /api/cluster`) with numeric scaling and categorical one-hot encoding.\n- Isolation Forest anomaly screening (`POST /api/anomalies`). Anomaly flags are investigation leads, not proof of fraud or error.\n- Automatic CSV delimiter detection for common comma- and semicolon-delimited files.\n\n## Important limitations in v3.0
+This is a functional starter release, not yet a production AutoML suite. Dataset and live model registries are in memory and clear on API restart; experiment JSON and joblib files persist. Model metadata is not reloaded after restart. SHAP, neural networks, XGBoost/LightGBM, grouped/time-series splitters, drift monitoring, durable model registry and multi-user isolation are not implemented yet. The new cross-validation and randomized search tools are bounded starter implementations, not a full AutoML system. Chronological split follows row order; sort your CSV by timestamp first. Permutation importance is not causal explanation.
 
 Do not expose this API to the public internet. It has no authentication. Only load trusted joblib files. For trading research, use walk-forward validation, fees, slippage, realistic execution and paper trading; a high historical score does not establish future profitability.
 
 ## API endpoints
-`GET /api/health`; `POST /api/datasets`; `GET /api/datasets/{id}`; `POST /api/train`; `POST /api/predict`; `GET /api/experiments`; `GET /api/models`.
+`GET /api/health`; `POST /api/datasets`; `GET /api/datasets/{id}`; `POST /api/train`; `POST /api/predict`; `GET /api/experiments`; `GET /api/models`; `POST /api/validate`; `POST /api/tune`; `POST /api/cluster`; `POST /api/anomalies`.
 
 ## Deploy on Render
 
