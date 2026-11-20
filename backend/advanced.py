@@ -188,8 +188,9 @@ def cluster(q: UnsupervisedRequest):
     estimator = KMeans(n_clusters=q.clusters, n_init=10, random_state=q.random_state)
     labels = estimator.fit_predict(Z)
     counts = np.bincount(labels, minlength=q.clusters)
-    sample = Z if len(Z) <= 5000 else Z[np.random.default_rng(q.random_state).choice(len(Z), 5000, replace=False)]
-    sample_labels = labels if len(Z) <= 5000 else labels[np.random.default_rng(q.random_state).choice(len(Z), 5000, replace=False)]
+    sample_idx = np.arange(len(Z)) if len(Z) <= 5000 else np.random.default_rng(q.random_state).choice(len(Z), 5000, replace=False)
+    sample = Z[sample_idx]
+    sample_labels = labels[sample_idx]
     sil = float(silhouette_score(sample, sample_labels)) if len(np.unique(sample_labels)) > 1 and len(sample_labels) > q.clusters else None
     return {"method": "kmeans", "rows": len(X), "features": features,
             "encoded_feature_count": int(X.shape[1]), "clusters": q.clusters,
