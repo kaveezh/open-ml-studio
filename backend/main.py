@@ -91,8 +91,22 @@ def analyze_dataset(did: str):
                                 "counts": [int(x) for x in vc.values]})
     corr_cols = [x["column"] for x in numeric[:20]]
     corr = df[corr_cols].corr(numeric_only=True).replace([np.inf, -np.inf], np.nan).fillna(0) if len(corr_cols) >= 2 else pd.DataFrame()
+    missing = [{"column": str(col), "missing": int(df[col].isna().sum()),
+                "missing_pct": round(float(df[col].isna().mean() * 100), 2)}
+               for col in df.columns]
+    numeric_summary = [{"column": x["column"], "count": x["count"],
+                        "mean": round(x["mean"], 4), "median": round(x["median"], 4),
+                        "std": round(x["std"], 4), "min": round(x["min"], 4),
+                        "max": round(x["max"], 4)} for x in numeric[:20]]
     return {
         "dataset_id": did,
+        "rows": int(len(df)),
+        "columns": int(len(df.columns)),
+        "duplicate_rows": int(df.duplicated().sum()),
+        "missing_cells": int(df.isna().sum().sum()),
+        "missing_pct": round(float(df.isna().sum().sum() / max(1, df.size) * 100), 2),
+        "missing": missing[:30],
+        "numeric_summary": numeric_summary,
         "numeric": numeric[:20],
         "categorical": categorical[:20],
         "correlation": {"labels": corr.columns.tolist(), "values": corr.round(3).values.tolist()} if not corr.empty else None,
